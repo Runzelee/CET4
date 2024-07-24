@@ -16,7 +16,11 @@ session.get(url)
 
 
 df = pd.read_excel('CET4 RAW.xlsx')
+i=0
 for index, row in df.iterrows():
+    i+=1
+    if i>30:
+        break
 
     cell_value = row[0]
     
@@ -42,5 +46,5 @@ for index, row in df.iterrows():
         except (KeyError, IndexError):
             print(f"无法找到单词 {query_word} 的例句")
             
-# 保存修改后的Excel文件
+
 df.to_excel('CET4 RAW_modified.xlsx', index=False)
