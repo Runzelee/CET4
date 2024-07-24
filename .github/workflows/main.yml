@@ -1,0 +1,36 @@
+name: Run youdao.py
+
+on:
+  watch:
+    types: [started]
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas requests openpyxl
+
+    - name: Run youdao.py
+      run: python youdao.py
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name Apibot
+        git config --global user.email lhx060906@outlook.com
+        git add CET4\ RAW_modified.xlsx
+        git commit -m 'Add CET4 RAW_modified.xlsx'
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
