@@ -1,18 +1,7 @@
 import pandas as pd
 import requests
 import json
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-
-url='https://dict.youdao.com/jsonapi_s'
-
-session = requests.Session()
-retry = Retry(connect=3, backoff_factor=0.5)
-adapter = HTTPAdapter(max_retries=retry)
-session.mount('http://', adapter)
-session.mount('https://', adapter)
-
-session.get(url)
+import re
 
 
 df = pd.read_excel('CET4 RAW.xlsx')
@@ -22,24 +11,20 @@ for index, row in df.iterrows():
     
     if isinstance(cell_value, str) and len(cell_value) >= 2:
         query_word = cell_value
-        
-        res = requests.post(url, data={
-            'q': query_word,
-            'le': 'en'
-        })
-        
-        res_json = json.loads(res.text)
-        
-        try:
-            chn_sent = res_json['collins']['collins_entries'][0]['entries']['entry'][0]['tran_entry'][0]['exam_sents']['sent'][0]['chn_sent']
-            eng_sent = res_json['collins']['collins_entries'][0]['entries']['entry'][0]['tran_entry'][0]['exam_sents']['sent'][0]['eng_sent']
-            
-            #print(chn_sent)
-            #print(eng_sent)
-            
+
+        url = f"https://dict.youdao.com/result?word=lj%3A{query_word}&lang=en"
+        response = requests.get(url)
+        html_content = response.text
+
+        pattern = re.compile(r'sentence-pair\":\[\{sentence:\"(.*?)\",\"sentence-eng\":\"(.*?)\",\"sentence-translation\":\"(.*?)\"')
+        match = pattern.search(html_content)
+
+        if match:
+            eng_sent = match.group(1).replace("\\", "")
+            chn_sent = match.group(3).replace("\\", "")
             df.at[index, '中文例句'] = chn_sent
             df.at[index, '英文例句'] = eng_sent
-        except (KeyError, IndexError):
+        else:
             print(f"无法找到单词 {query_word} 的例句")
             
 
